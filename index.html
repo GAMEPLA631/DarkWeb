@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Pridanie Zombie emoji (🧟) priamo do titulku. Toto je najspoľahlivejší spôsob, ako vynútiť zobrazenie ikony (namiesto glóbusu), ak prehliadač podporuje emoji v titulkoch. -->
+    <title>Dark Web - 3. Október</title>
+    <!-- Favicon (Ikona pre záložku/glóbus): Používame Zombie emoji aj ako favicon cez SVG Data URI, čo je niekedy pre prehliadače spoľahlivejšie ako len text. -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧟</text></svg>">
+    <!-- Stará Web ikona (Favicon) v Base64 je odstránená, nechávame len emoji SVG -->
+    <!-- Načítanie Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* Nastavenie písma Inter a temného pozadia */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d0d0d; /* Veľmi tmavé pozadie */
+            color: #f3f4f6; /* Svetlý text */
+            line-height: 1.7;
+        }
+        /* Štýl pripomínajúci "digitálny šum" alebo glitch, pre temnú estetiku */
+        .glitch-text {
+            color: #ff4747; /* Horúca červená pre titulok */
+            text-shadow: 
+                0 0 5px rgba(255, 0, 0, 0.5),
+                0 0 15px rgba(255, 60, 60, 0.4);
+        }
+        .main-card {
+             /* Estetika "Wix bloku": zaoblené rohy, tieň, centrálne umiestnenie */
+            background-color: #1a1a1a;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 60, 60, 0.2);
+            border: 1px solid #333;
+        }
+        .date-highlight {
+            color: #ff9900; /* Oranžové zvýraznenie dátumu */
+            font-weight: 900;
+        }
+        /* Skrytý posuvník tela pre lepšie zobrazenie modálneho okna */
+        .no-scroll {
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 sm:p-8">
+
+    <!-- Login Modal/Overlay - Zobrazí sa, ak nie je užívateľ prihlásený -->
+    <div id="loginModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-95 backdrop-blur-sm">
+        <div class="bg-gray-800 p-8 sm:p-10 rounded-xl max-w-sm w-full main-card text-center border-red-500/50">
+            <h2 class="text-3xl font-black glitch-text mb-4">
+                PRÍSTUP ZAMKNUTÝ
+            </h2>
+            <p class="text-gray-400 mb-6">
+                Zadaj svoju šifrovanú prezývku pre vstup na Dark Web.
+            </p>
+            <form id="loginForm">
+                <input 
+                    type="text" 
+                    id="nicknameInput" 
+                    placeholder="Tvoja Prezývka..." 
+                    class="w-full p-3 mb-4 bg-gray-900 border border-red-700/50 rounded-lg focus:border-red-500 focus:ring-red-500 text-white placeholder-gray-500" 
+                    required 
+                    minlength="3"
+                >
+                <button type="submit" class="w-full py-3 bg-red-600 hover:bg-red-700 font-bold rounded-lg transition duration-300 shadow-md">
+                    VSTÚPIŤ
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hlavička (Navigácia) -->
+    <header class="w-full max-w-6xl flex justify-between items-center py-4 px-4 sm:px-8 border-b border-red-800/50 mb-8">
+        <div class="text-3xl font-black glitch-text tracking-widest">
+            Temný Web
+        </div>
+        <nav class="hidden md:flex space-x-6 text-sm items-center">
+            <a href="#" class="hover:text-red-500 transition duration-300">Domov</a>
+            <a href="#" class="hover:text-red-500 transition duration-300">Miestne Legendy</a>
+            <a href="#" class="hover:text-red-500 transition duration-300">Archív</a>
+            
+            <!-- Oblasť pre autentifikáciu (Prihlásenie/Nickname) -->
+            <div id="authArea" class="ml-4">
+                <!-- Obsah sa dynamicky injektuje pomocou JS -->
+            </div>
+        </nav>
+        <button class="md:hidden text-xl text-red-500 focus:outline-none">&#9776;</button> <!-- Burger Menu -->
+    </header>
+
+    <!-- Hlavný kontajner pre legendu - "Wix Blok" s temným motívom -->
+    <main class="w-full max-w-4xl main-card rounded-xl p-6 sm:p-10 mb-10">
+
+        <!-- Sekcia 1: Hlavný titulok a tlačidlo TTS -->
+        <section class="text-center mb-10">
+            <h1 class="text-4xl sm:text-6xl font-black mb-3 leading-tight uppercase glitch-text">
+                3. Október: Hodina Klopania
+            </h1>
+            <p class="text-lg sm:text-xl text-gray-400">
+                Pravda je len v šepote.
+            </p>
+            
+            <!-- Tlačidlo na spustenie čítania nahlas -->
+            <button id="ttsButton" class="mt-4 inline-flex items-center px-6 py-2 border border-red-500 text-sm font-medium rounded-full text-red-500 hover:bg-red-900/40 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                <!-- Ikonka pre prehrať (Play/Speaker) -->
+                <svg id="ttsIcon" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.121-7.072a8 8 0 010 11.314M6 15h2.571l3.543 3.543A1 1 0 0013 18V6a1 1 0 00-1.357-.703L8.571 9H6a1 1 0 00-1 1v4a1 1 0 001 1z"></path></svg>
+                Prečítať nahlas
+            </button>
+        </section>
+
+        <div class="h-0.5 w-24 bg-red-600/70 mx-auto mb-10 rounded-full"></div>
+
+        <!-- Sekcia 2: Samotná Legenda -->
+        <section id="legendText" class="space-y-6 text-gray-300 text-base sm:text-lg">
+            
+            <p class="font-bold text-red-500 uppercase tracking-wider">
+                Miestna Chronika
+            </p>
+
+            <p>
+                Vo väčšine miest je najstrašidelnejším dňom Halloween. V našom meste, hlboko v tieni starých ulíc, je to však <span class="date-highlight">3. október</span>. Nie je to dátum spojený so smrťou kráľa alebo veľkou tragédiou. Je to niečo oveľa osobnejšie a tichšie.
+            </p>
+
+            <h2 class="text-2xl font-bold mt-8 mb-4 text-red-400">
+                Polnočná Návšteva
+            </h2>
+
+            <p>
+                Každý rok, presne v momente, keď hodiny udrú <span class="font-bold text-red-300">polnoc z 3. na 4. októbra</span>, sa začne diať niečo nevysvetliteľné. Nie pre každého. Len pre <strong class="text-red-500">vybrané duše</strong>, ktoré sú vo svojich domovoch osamotené, začnú počuť zvuk.
+            </p>
+
+            <p class="italic text-xl text-center py-4 bg-gray-900/50 border-l-4 border-red-600">
+                Tiché, rytmické klopanie na okno. <br> Vždy tri údery. Vždy tri.
+            </p>
+
+            <p>
+                Klopanie je také jemné, že ho ľahko zameníte za vetvu alebo dážď, ale je tak neuveriteľne blízko, že máte pocit, akoby ten, kto ho robí, stál len pár centimetrov od vás. Keď sa odvážite pozrieť von, uvidíte len tmu a odraz vlastnej tváre. **Nikto tam nie je.**
+            </p>
+
+            <h2 class="text-2xl font-bold mt-8 mb-4 text-red-400">
+                Legenda o "Nočnom Klopačovi"
+            </h2>
+
+            <p>
+                Staré babičky hovoria o **Nočnom Klopačovi** – duchovi starého stolára, ktorého dušu zlomila nespravodlivá kliatba. Kedysi mal zvyk klopať trikrát na drevené okenice predtým, než vstúpil do domu svojich priateľov. Teraz sa vracia, hľadajúc útočisko, a jeho klopanie nie je pozvánka, ale **výber**.
+            </p>
+            
+            <p>
+                Ak je klopanie intenzívne, znamená to, že si ťa vybral. Málokto vie, čo sa stane, ak sa ho pokúsiš ignorovať. Ale všetci vedia, čo sa stane, ak urobíš osudnú chybu a **otvoríš dvere**. Legenda hovorí, že ti vezme nielen miesto na spanie, ale aj schopnosť opustiť ho.
+            </p>
+            
+            <p class="text-center pt-6 text-2xl font-black glitch-text">
+                Dnes je 3. október. <span class="block mt-2">Neklop. Neotváraj.</span>
+            </p>
+
+        </section>
+        
+        <div class="h-0.5 w-24 bg-red-600/70 mx-auto mt-10 mb-8 rounded-full"></div>
+
+        <!-- Sekcia 3: Call to Action / Upozornenie (Wix-like blok) -->
+        <section class="text-center p-6 bg-red-900/30 border-2 border-red-700 rounded-lg">
+            <p class="text-xl font-bold text-red-300 mb-3">
+                UPOZORNENIE PRE POUŽÍVATEĽOV
+            </p>
+            <p class="text-sm text-gray-400">
+                Táto stránka je súčasťou siete a jej obsah môže byť <strong class="text-red-500">nestály a neoverený</strong>. Zdieľajte tieto príbehy na vlastné riziko. Nikdy nezabudnite, že niektoré veci by mali zostať <span class="font-bold">neprečítané</span>.
+            </p>
+        </section>
+        
+    </main>
+    
+    <!-- Pätička -->
+    <footer class="w-full max-w-6xl text-center mt-8 text-xs text-gray-600">
+        &copy; 2025 Temný Web. Všetky práva sú chránené a strašidelné.
+    </footer>
+
+    <script>
+        // === ČASŤ 1: Text-to-Speech (TTS) Logika ===
+        
+        const ttsButton = document.getElementById('ttsButton');
+        let utterance = null;
+        let isSpeaking = false;
+        
+        // Ikonky
+        const playIcon = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.121-7.072a8 8 0 010 11.314M6 15h2.571l3.543 3.543A1 1 0 0013 18V6a1 1 0 00-1.357-.703L8.571 9H6a1 1 0 00-1 1v4a1 1 0 001 1z"></path></svg>';
+        const stopIcon = '<svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+
+        // Získa text legendy
+        function getTextToRead() {
+            const contentElements = document.querySelectorAll('#legendText p, #legendText h2');
+            let fullText = 'Legenda o 3. októbri. ';
+            
+            contentElements.forEach(el => {
+                let text = el.textContent.trim().replace(/\*\*(.*?)\*\*/g, '$1');
+                fullText += text + '. ';
+            });
+            
+            const title = document.querySelector('h1').textContent.trim();
+            const subtitle = document.querySelector('section.text-center p:not(#ttsButton)').textContent.trim();
+            
+            return `${title}. ${subtitle}. ${fullText}`;
+        }
+
+        // Nájde SK/CS hlas
+        function getSlovakVoice() {
+            const voices = window.speechSynthesis.getVoices();
+            return voices.find(voice => voice.lang.includes('sk-') || voice.lang.includes('cs-')) || 
+                   voices.find(voice => voice.default);
+        }
+
+        function setupSpeech() {
+            if (!('speechSynthesis' in window)) {
+                ttsButton.innerHTML = 'Čítanie nepodporované v tomto prehliadači';
+                ttsButton.disabled = true;
+                return;
+            }
+
+            ttsButton.addEventListener('click', () => {
+                if (isSpeaking) {
+                    window.speechSynthesis.cancel();
+                    isSpeaking = false;
+                    ttsButton.innerHTML = playIcon + ' Prečítať nahlas';
+                } else {
+                    const text = getTextToRead();
+                    utterance = new SpeechSynthesisUtterance(text);
+                    
+                    const voice = getSlovakVoice(); 
+                    if (voice) {
+                        utterance.voice = voice;
+                        utterance.lang = voice.lang;
+                    } else {
+                        utterance.lang = 'sk-SK';
+                    }
+
+                    utterance.rate = 1.0;
+                    utterance.pitch = 1.0;
+
+                    utterance.onend = () => {
+                        isSpeaking = false;
+                        ttsButton.innerHTML = playIcon + ' Prečítať nahlas';
+                    };
+                    utterance.onerror = (event) => {
+                        console.error('SpeechSynthesis error:', event.error);
+                        isSpeaking = false;
+                        ttsButton.innerHTML = playIcon + ' Chyba čítania';
+                    };
+
+                    window.speechSynthesis.speak(utterance);
+                    isSpeaking = true;
+                    ttsButton.innerHTML = stopIcon + ' Zastaviť čítanie';
+                }
+            });
+        }
+        
+        // === ČASŤ 2: Prihlásenie (Nickname) Logika ===
+        
+        const loginModal = document.getElementById('loginModal');
+        const loginForm = document.getElementById('loginForm');
+        const authArea = document.getElementById('authArea');
+        const BODY = document.body;
+        
+        // Zobrazí modálne okno na prihlásenie
+        function showLoginModal() {
+            loginModal.classList.remove('hidden');
+            BODY.classList.add('no-scroll'); // Zakáže scroll na pozadí
+            
+            // VYPLNENIE POSLEDNEJ POUŽITEJ PREZÝVKY
+            const lastNickname = localStorage.getItem('lastUsedNickname');
+            const nicknameInput = document.getElementById('nicknameInput');
+            if (lastNickname && nicknameInput) {
+                nicknameInput.value = lastNickname;
+            }
+        }
+
+        // Skryje modálne okno a povolí scroll
+        function hideLoginModal() {
+            loginModal.classList.add('hidden');
+            BODY.classList.remove('no-scroll');
+        }
+
+        // Aktualizuje hlavičku (zobrazí nickname alebo tlačidlo Prihlásenie)
+        function updateAuthArea(nickname) {
+            if (nickname) {
+                // Uloží prezývku ako naposledy použitú (PRE VYPLNENIE FORMULÁRA)
+                localStorage.setItem('lastUsedNickname', nickname);
+
+                // Zobrazenie prihláseného stavu s tlačidlom Odhlásiť
+                authArea.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="text-red-500 font-bold border-r border-red-800/50 pr-3">
+                            ${nickname}
+                        </span>
+                        <button id="logoutButton" class="text-gray-400 hover:text-red-500 transition duration-300 border px-3 py-1 rounded-full border-gray-600 text-xs">
+                            Odhlásiť
+                        </button>
+                    </div>
+                `;
+                // Pridanie event listeneru pre odhlásenie
+                document.getElementById('logoutButton').addEventListener('click', handleLogout);
+                hideLoginModal();
+            } else {
+                // Zobrazenie stavu pred prihlásením s tlačidlom Prihlásenie
+                authArea.innerHTML = `
+                    <button id="loginButton" class="hover:text-red-500 transition duration-300 border px-3 py-1 rounded-full border-red-500">
+                        Prihlásenie
+                    </button>
+                `;
+                document.getElementById('loginButton').addEventListener('click', showLoginModal);
+            }
+        }
+
+        // Spracuje prihlásenie (uloží nickname)
+        function handleLogin(event) {
+            event.preventDefault();
+            const nicknameInput = document.getElementById('nicknameInput');
+            const nickname = nicknameInput.value.trim();
+
+            if (nickname.length >= 3) {
+                // Uloží prezývku, ktorá udržuje prihlásenie
+                localStorage.setItem('userNickname', nickname); 
+                // Uloží prezývku ako naposledy použitú (pre automatické vyplnenie nabudúce)
+                localStorage.setItem('lastUsedNickname', nickname);
+                
+                checkLoginState(); // Opätovne skontroluje a aktualizuje UI
+            } else {
+                // Ak nickname nie je dostatočne dlhý
+                nicknameInput.placeholder = "Minimálne 3 znaky!";
+                nicknameInput.value = '';
+                nicknameInput.classList.add('border-yellow-500');
+                setTimeout(() => nicknameInput.classList.remove('border-yellow-500'), 1500);
+            }
+        }
+
+        // Spracuje odhlásenie (vymaže nickname)
+        function handleLogout() {
+            // Vymaže aktívny stav prihlásenia
+            localStorage.removeItem('userNickname');
+            
+            // lastUsedNickname (pre automatické vyplnenie) zostane zachovaný
+            checkLoginState();
+            // Po odhlásení sa vrátime k modálnemu oknu, kde je prezývka predvyplnená
+        }
+
+        // Hlavná funkcia na kontrolu stavu
+        function checkLoginState() {
+            const nickname = localStorage.getItem('userNickname');
+            
+            updateAuthArea(nickname);
+            
+            if (!nickname) {
+                showLoginModal();
+            }
+        }
+
+        // Spustenie pri načítaní okna
+        window.onload = function () {
+            // 1. Nastavenie prihlásenia
+            loginForm.addEventListener('submit', handleLogin);
+            checkLoginState();
+            
+            // 2. Nastavenie čítania nahlas (TTS)
+            setupSpeech();
+        };
+    </script>
+</body>
+</html>
